@@ -8,6 +8,8 @@
 ## - The app has not slow start, the big loop through all .desktop files is in the add_icon() function
 ## - The apps icons are not scalled in several sizes (icons with path have troubles in yad...)
 ## - The line put in icewm's toolbar file is taken from the icewm's menu
+## Original from: https://gitlab.com/antix-contribs/contribs-goodies/-/blob/master/icewm-toolbar-icon-manager-v22.sh
+## See: https://www.antixforum.com/forums/topic/toolbar-icon-manager-for-icewm-altered-version/#post-74058
 
 TEXTDOMAINDIR=/usr/share/locale
 TEXTDOMAIN=icewm-toolbar-icon-manager
