@@ -156,7 +156,7 @@ read -sn 1 -p '(Any key closes / Cualquier tecla cierra)' -t 999999999
 EOF
 chmod 755 /tmp/mi-updateador.sh
 #Wait to write the script on disk and execute it in a terminal
-sleep 0.1s
+sleep 0.25s
 x-terminal-emulator -T $software_update -e /tmp/mi-updateador.sh
 
 rm /tmp/mi-updateador*
