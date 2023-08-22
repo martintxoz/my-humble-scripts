@@ -24,7 +24,8 @@
 ### Start of user configurations
 #Configuration: application for the PC logout or reboot:
 export reboot_app="/usr/local/bin/obshutdown"
-#Configuration: seconds to wait for the desktop to full start. For no wait put 0:
+#Configuration: seconds to wait for the desktop to full start. For no wait put 0.
+# Not used if user start de app himself, as 'mi-updateador.sh user'
 export wait="10s"
 #Configuration: if desktop notification app is "Dunst", there are problems if the icon file is not fully specified 
 # in other cases you can surely put here "system-software-update" for the icon
@@ -34,6 +35,7 @@ export notification_icon="/usr/share/icons/Tango/scalable/apps/system-software-u
 #1. To do or not the "apt update" prior to installation, for look at new packages.
 # Choices: "yes" or "no" (without quotes). Yes if usefull in case of a rare use of the machine, 
 #  where there is a long time from the last apt update to the package installation
+#  But see the "Buscar actualizaciones" icon menu option... You can start it yourself!!
 export apt_update=no
 #2. To do an "apt upgrade" or an "apt full-upgrade" for the new packages installation:
 # "apt upgrade": only install a package if no other installed package need to be removed, is safer
@@ -45,6 +47,11 @@ export apt_installation=apt-full-upgrade
 # Choices: "yes" or "no" (without quotes). No is safer...
 export apt_autoremove=yes
 ### End of configurations
+
+#Si el script lo arranca el usuario desde menu de su escritorio, es que quiere ver icono en barra tareas
+# con esta variable sabemos si ha sido arrancado exprofeso por user o arrancado automatico
+#Pongo archivo desktop que se arranca como 'mi-updeteador.sh user'
+USER="$1"
 
 #See if there are updates of pending packages and create a list of updatable packages, if any:
 LC_ALL=C apt-get -o Debug::NoLocking=true --trivial-only -V dist-upgrade 2>/dev/null > /tmp/mi-updateador
@@ -71,6 +78,10 @@ fi
 		export upgrade_completed="Full upgrade complete (or was canceled)."
 		export terminal_close="This terminal window can now be closed."
 		export key_close="Press any key to close window"
+		export apt_history_window="This is the content of the /var/log/apt/history.log file.\nThe history of the last updates of Apt."
+		export apt_history_title="Apt update history"
+		export dpkg_history_window="This is part of the content of the /var/log/dpkg.log file.\nThe history of the last updates with Dpkg."
+		export dpkg_history_title="Update history with Dpkg"
 #Other languages:		
 case $LANG in
     #Spanish
@@ -88,6 +99,10 @@ case $LANG in
 		export upgrade_completed="Se realizó la actualización completa (o fue cancelada)."
 		export terminal_close="Esta ventana de terminal ya puede cerrarse."
 		export key_close="Oprima cualquier tecla para cerrar esta ventana"
+		export apt_history_window="Este es el contenido del archivo /var/log/apt/history.log.\nLa historia de las ultimas actualizaciones de Apt."
+		export apt_history_title="Historia de actualizaciones de Apt"
+		export dpkg_history_window="Este es parte del contenido del archivo /var/log/dpkg.log.\nLa historia de las ultimas actualizaciones con Dpkg."
+		export dpkg_history_title="Historia de actualizaciones con Dpkg"
 		#;;
 esac
 ### Localization end
@@ -111,8 +126,8 @@ cat > /tmp/mi-updateador.sh << "EOF"
 sleep 0.25s
 
 #To center the terminal window on the screen:
-#Decrease the size of the window titled $software_update at 67% of the screen in the two dimensions 
-xdotool windowsize $(xdotool search --onlyvisible --name "$software_update") 67% 67%
+#Decrease the size of the window titled $software_update at 67% of the screen wide 
+xdotool windowsize $(xdotool search --onlyvisible --name "$software_update") 67% 90%
 
 #This centers the window titled $software_update in the center of the screen
 IFS='x' read sw sh < <(xdpyinfo | grep dimensions | grep -o '[0-9x]*' | head -n1)
@@ -156,7 +171,7 @@ read -sn 1 -p '(Any key closes / Cualquier tecla cierra)' -t 999999999
 EOF
 chmod 755 /tmp/mi-updateador.sh
 #Wait to write the script on disk and execute it in a terminal
-sleep 0.25s
+sleep 0.5s
 x-terminal-emulator -T $software_update -e /tmp/mi-updateador.sh
 
 rm /tmp/mi-updateador*
@@ -185,8 +200,8 @@ yad --window-icon=system-software-update \
 
     #Remove the icon on the system tray (taskbar) 
     # The code here has to be the same as down, in $yadicono...
-    pkill --full 'yad --notification --image=system-software-update --text=$yes_updates2 --command=bash -c segundo-paso-ventana-y-upgrade --menu=Update/Actualiza!bash -c segundo-paso-ventana-y-upgrade!system-software-update|Quit/Salir!quit!back'
-
+    pkill --full 'yad --notification --image=system-software-update --text=$yes_updates3 --command=bash -c segundo-paso-ventana-y-upgrade --menu=Actualizar!bash -c segundo-paso-ventana-y-upgrade!system-software-update|Buscar actualizaciones!bash -c user-apt-update!reload|Historia Dpkg!bash -c dpkg-history-window!emblem-debian|Historia Apt!bash -c apt-history-window!emblem-debian-symbolic|Salir!quit!back'
+    
     #Execute the update function
     crear-inline-script-y-ejecutar
     exit 0
@@ -212,7 +227,7 @@ yad --window-icon=system-software-update \
 
     #Remove the icon on the system tray (taskbar) 
     # The code here has to be the same as down, in $yadicono...
-    pkill --full 'yad --notification --image=system-software-update --text=$yes_updates2 --command=bash -c segundo-paso-ventana-y-upgrade --menu=Update/Actualiza!bash -c segundo-paso-ventana-y-upgrade!system-software-update|Quit/Salir!quit!back'
+    pkill --full 'yad --notification --image=system-software-update --text=$yes_updates3 --command=bash -c segundo-paso-ventana-y-upgrade --menu=Actualizar!bash -c segundo-paso-ventana-y-upgrade!system-software-update|Buscar actualizaciones!bash -c user-apt-update!reload|Historia Dpkg!bash -c dpkg-history-window!emblem-debian|Historia Apt!bash -c apt-history-window!emblem-debian-symbolic|Salir!quit!back'
 
     #This puts an icon in system tray to remember reboot... if click on it starts the logout app (configured above)
     yad --notification --image=software-update-urgent --text="$reboot_text" --command="$reboot_app" --menu='Quit/Salir!quit!back' &
@@ -232,13 +247,103 @@ rm /tmp/mi-updateador*
 #Export the "Packages to update list Window" function so that the Yad icon can execute it 
 export -f segundo-paso-ventana-y-upgrade
 
+
+#Function showing a window with de apt history, from the /var/log/apt/history.log file
+# This function is called by icon in the taskbar, at script last lines: yadicono ... 
+apt-history-window()
+{
+#Window with history:
+cat /var/log/apt/history.log | yad --window-icon=system-software-update \
+         --text-info --width=1000 --height=500 --center --button=gtk-close \
+         --image=system-software-update \
+         --title "$apt_history_title" \
+         --text="$apt_history_window" \
+         --fontname="mono regular 11" --margins=5 --borders=1 >& /dev/null
+}
+#Export the "Apt history window" function so that the Yad icon can execute it 
+export -f apt-history-window
+
+
+#Function showing a window with de dpkg history, from the /var/log/dpkg.log file
+# This function is called by icon in the taskbar, at script last lines: yadicono ... 
+dpkg-history-window()
+{
+#Window with history:
+zgrep -EH ' install | upgrade | purge | remove ' /var/log/dpkg.log | cut -f2- -d: | sort -r | sed 's/ remove / remove  /;s/ purge / purge   /' | grep "^" | yad --window-icon=system-software-update \
+         --text-info --width=1000 --height=500 --center --button=gtk-close \
+         --image=system-software-update \
+         --title "$dpkg_history_title" \
+         --text="$dpkg_history_window" \
+         --fontname="mono regular 11" --margins=5 --borders=1 >& /dev/null
+}
+#Export the "Dpkg history window" function so that the Yad icon can execute it 
+export -f dpkg-history-window
+
+
+#Function for the user to make and "apt update"
+# This function is called by icon in the taskbar, at script last lines: yadicono ... 
+user-apt-update()
+{
+#The following lines, until the last EOF, is the code for the update script in /tmp 
+cat > /tmp/user-apt-update.sh << "EOF"
+#!/bin/bash
+
+#Turn on script debugging:
+#set -x
+
+#Without this, the commands to change window size do not work, or affect others, not this terminal...
+sleep 0.25s
+
+#To center the terminal window on the screen:
+#Decrease the size of the window titled $software_update at 67% of the screen wide 
+xdotool windowsize $(xdotool search --onlyvisible --name "$software_update") 67% 70%
+
+#This centers the window titled $software_update in the center of the screen
+IFS='x' read sw sh < <(xdpyinfo | grep dimensions | grep -o '[0-9x]*' | head -n1)
+read wx wy ww wh < <(wmctrl -lG | grep "$software_update" | sed 's/^[^ ]* *[^ ]* //;s/[^0-9 ].*//;')
+wmctrl -r "$software_update" -e 0,$(($sw/2-$ww/2)),$(($sh/2-$wh/2)),$ww,$wh
+
+#Compose the APT command line for apt update
+export apt_update_user="echo ' ';echo 'Look for new packages/Buscamos nuevos paquetes:';echo '==============================================';echo ' ';apt update;"
+
+#The commands that really make the update (variables determined up) and:
+# - pkexec (from polkit) for gain root
+# - DISPLAY XAUTHORITY for apt-listchanges to come out in a separate window
+# - bash -c "command_1;command_2" for not put the password 2 times
+pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY bash -c "$apt_update_user"
+
+#Terminal window remains open until any key is pressed and closes it 
+echo
+echo "$terminal_close"' '
+#read -sn 1 -p '("$key_close")' -t 999999999
+read -sn 1 -p '(Any key closes / Cualquier tecla cierra)' -t 999999999
+
+#Turn off script debugging:
+#set +x
+
+EOF
+chmod 755 /tmp/user-apt-update.sh
+#Wait to write the script on disk and execute it in a terminal
+sleep 0.5s
+#x-terminal-emulator -T $software_update -e /tmp/user-apt-update.sh
+termit --title $software_update --name Informaciones -e /tmp/user-apt-update.sh
+
+rm /tmp/user-apt-update.sh
+}
+#Export the "User apt update" function so that the Yad icon can execute it 
+export -f user-apt-update
+
+
 ### HERE BEGINS THE RUN OF THE SCRIPT...
 
-#Wait for the desktop to full start (configured above).
-sleep "$wait"
+#Wait for the desktop to full start (configured above), but only if script is not started by user.
+if [ "$USER" = "" ]; then
+  sleep "$wait"
+fi
 
-# If there are 0 upgrades only show a notification and exit, if there are more, show icon in taskbar:
-if [ "$NUPGRADEABLE" = "" ] || [ "$NUPGRADEABLE" = "0" ]; then
+#If there are 0 upgrades AND script is NOT started by user, only show a notification and exit.
+# If there are more upgrades OR user starts de script, show icon in taskbar:
+if [ "$NUPGRADEABLE" = "" ] || [ "$NUPGRADEABLE" = "0" ] && [ "$USER" = "" ]; then
 
     notify-send --app-name="$software_update" --icon="$notification_icon" --urgency=low "$no_updates"
     rm /tmp/mi-updateador*
@@ -250,7 +355,7 @@ else
 
    #Show icon on systemtray with Yad, if click run function: segundo-paso-ventana-y-upgrade
    # https://sourceforge.net/p/yad-dialog/wiki/NotificationIcon/ 
-   yadicono=$(yad --notification --image=system-software-update --text="$yes_updates3" --command='bash -c segundo-paso-ventana-y-upgrade' --menu='Update/Actualiza!bash -c segundo-paso-ventana-y-upgrade!system-software-update|Quit/Salir!quit!back')
+   yadicono=$(yad --notification --image=system-software-update --text="$yes_updates3" --command='bash -c segundo-paso-ventana-y-upgrade' --menu='Actualizar!bash -c segundo-paso-ventana-y-upgrade!system-software-update|Buscar actualizaciones!bash -c user-apt-update!reload|Historia Dpkg!bash -c dpkg-history-window!emblem-debian|Historia Apt!bash -c apt-history-window!emblem-debian-symbolic|Salir!quit!back')
    #If click in "Quit icon" of the icon contextual menu, exit script:
    if test -z "$yadicono"; then
       rm /tmp/mi-updateador*
