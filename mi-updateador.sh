@@ -91,7 +91,7 @@ fi
 #Other languages:		
 case $LANG in
     #Spanish
-	eu* )
+	es* )
 		export software_update="Actualizar_software"
 		export no_updates="NO hay actualizaciones de software disponibles"
 		export yes_updates1="Hay "$NUPGRADEABLE" actualizacion(es) de software disponible(s)."
